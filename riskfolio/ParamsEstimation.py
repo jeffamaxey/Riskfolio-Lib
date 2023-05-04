@@ -213,9 +213,8 @@ def forward_regression(X, y, criterion="pvalue", threshold=0.05, verbose=False):
     if not isinstance(y, pd.DataFrame) and not isinstance(y, pd.Series):
         raise ValueError("y must be a column DataFrame")
 
-    if isinstance(y, pd.DataFrame):
-        if y.shape[0] > 1 and y.shape[1] > 1:
-            raise ValueError("y must be a column DataFrame")
+    if isinstance(y, pd.DataFrame) and y.shape[0] > 1 and y.shape[1] > 1:
+        raise ValueError("y must be a column DataFrame")
 
     included = []
     aic = 1e10
@@ -255,7 +254,7 @@ def forward_regression(X, y, criterion="pvalue", threshold=0.05, verbose=False):
                 print("Add {} with p-value {:.6}".format(new_feature, best_pvalue))
 
         # This part is how to deal when there isn't an asset with pvalue lower than threshold
-        if len(included) == 0:
+        if not included:
             excluded = list(set(X.columns) - set(included))
             best_pvalue = 999999
             new_feature = None
@@ -292,51 +291,46 @@ def forward_regression(X, y, criterion="pvalue", threshold=0.05, verbose=False):
                 X1 = sm.add_constant(X1)
                 results = sm.OLS(y, X1).fit()
 
-                if criterion == "AIC":
-                    if results.aic < aic:
-                        value = i
-                        aic = results.aic
-                if criterion == "SIC":
-                    if results.bic < sic:
-                        value = i
-                        sic = results.bic
-                if criterion == "R2":
-                    if results.rsquared > r2:
-                        value = i
-                        r2 = results.rsquared
-                if criterion == "R2_A":
-                    if results.rsquared_adj > r2_a:
-                        value = i
-                        r2_a = results.rsquared_adj
+                if criterion == "AIC" and results.aic < aic:
+                    value = i
+                    aic = results.aic
+                if criterion == "SIC" and results.bic < sic:
+                    value = i
+                    sic = results.bic
+                if criterion == "R2" and results.rsquared > r2:
+                    value = i
+                    r2 = results.rsquared
+                if criterion == "R2_A" and results.rsquared_adj > r2_a:
+                    value = i
+                    r2_a = results.rsquared_adj
 
                 j += 1
                 if j == len(excluded):
                     if value is None:
                         break
-                    else:
-                        excluded.remove(value)
-                        included.append(value)
-                        if verbose:
-                            if criterion == "AIC":
-                                print(
-                                    "Add {} with AIC {:.6}".format(value, results.aic)
+                    excluded.remove(value)
+                    included.append(value)
+                    if verbose:
+                        if criterion == "AIC":
+                            print(
+                                "Add {} with AIC {:.6}".format(value, results.aic)
+                            )
+                        elif criterion == "SIC":
+                            print(
+                                "Add {} with SIC {:.6}".format(value, results.bic)
+                            )
+                        elif criterion == "R2":
+                            print(
+                                "Add {} with R2 {:.6}".format(
+                                    value, results.rsquared
                                 )
-                            elif criterion == "SIC":
-                                print(
-                                    "Add {} with SIC {:.6}".format(value, results.bic)
+                            )
+                        elif criterion == "R2_A":
+                            print(
+                                "Add {} with Adjusted R2 {:.6}".format(
+                                    value, results.rsquared_adj
                                 )
-                            elif criterion == "R2":
-                                print(
-                                    "Add {} with R2 {:.6}".format(
-                                        value, results.rsquared
-                                    )
-                                )
-                            elif criterion == "R2_A":
-                                print(
-                                    "Add {} with Adjusted R2 {:.6}".format(
-                                        value, results.rsquared_adj
-                                    )
-                                )
+                            )
 
     return included
 
@@ -387,9 +381,8 @@ def backward_regression(X, y, criterion="pvalue", threshold=0.05, verbose=False)
     if not isinstance(y, pd.DataFrame) and not isinstance(y, pd.Series):
         raise ValueError("y must be a column DataFrame")
 
-    if isinstance(y, pd.DataFrame):
-        if y.shape[0] > 1 and y.shape[1] > 1:
-            raise ValueError("y must be a column DataFrame")
+    if isinstance(y, pd.DataFrame) and y.shape[0] > 1 and y.shape[1] > 1:
+        raise ValueError("y must be a column DataFrame")
 
     X1 = sm.add_constant(X)
     results = sm.OLS(y, X1).fit()
@@ -480,29 +473,28 @@ def backward_regression(X, y, criterion="pvalue", threshold=0.05, verbose=False)
                 if j == len(included):
                     if value is None:
                         break
-                    else:
-                        included.remove(value)
-                        if verbose:
-                            if criterion == "AIC":
-                                print(
-                                    "Drop {} with AIC {:.6}".format(value, results.aic)
+                    included.remove(value)
+                    if verbose:
+                        if criterion == "AIC":
+                            print(
+                                "Drop {} with AIC {:.6}".format(value, results.aic)
+                            )
+                        elif criterion == "SIC":
+                            print(
+                                "Drop {} with SIC {:.6}".format(value, results.bic)
+                            )
+                        elif criterion == "R2":
+                            print(
+                                "Drop {} with R2 {:.6}".format(
+                                    value, results.rsquared
                                 )
-                            elif criterion == "SIC":
-                                print(
-                                    "Drop {} with SIC {:.6}".format(value, results.bic)
+                            )
+                        elif criterion == "R2_A":
+                            print(
+                                "Drop {} with Adjusted R2 {:.6}".format(
+                                    value, results.rsquared_adj
                                 )
-                            elif criterion == "R2":
-                                print(
-                                    "Drop {} with R2 {:.6}".format(
-                                        value, results.rsquared
-                                    )
-                                )
-                            elif criterion == "R2_A":
-                                print(
-                                    "Drop {} with Adjusted R2 {:.6}".format(
-                                        value, results.rsquared_adj
-                                    )
-                                )
+                            )
 
     return included
 
@@ -543,9 +535,8 @@ def PCR(X, y, n_components=0.95):
     if not isinstance(y, pd.DataFrame) and not isinstance(y, pd.Series):
         raise ValueError("y must be a column DataFrame")
 
-    if isinstance(y, pd.DataFrame):
-        if y.shape[0] > 1 and y.shape[1] > 1:
-            raise ValueError("y must be a column DataFrame")
+    if isinstance(y, pd.DataFrame) and y.shape[0] > 1 and y.shape[1] > 1:
+        raise ValueError("y must be a column DataFrame")
 
     scaler = StandardScaler()
     scaler.fit(X)
@@ -1471,13 +1462,10 @@ def bootstrapping(X, kind="stationary", q=0.05, n_sim=3000, window=3, seed=0):
     else:
         raise ValueError("kind only can be 'stationary', 'circular' or 'moving'")
 
-    i = 0
-    for data in gen.bootstrap(n_sim):
+    for i, data in enumerate(gen.bootstrap(n_sim)):
         A = data[0][0]
         mus[i] = A.mean().to_numpy().reshape(1, m)
         covs[i] = A.cov().to_numpy()
-        i += 1
-
     mu_l = np.percentile(mus, q / 2 * 100, axis=0, keepdims=True).reshape(1, m)
     mu_u = np.percentile(mus, 100 - q / 2 * 100, axis=0, keepdims=True).reshape(1, m)
 
@@ -1497,7 +1485,7 @@ def bootstrapping(X, kind="stationary", q=0.05, n_sim=3000, window=3, seed=0):
     cov_mu = pd.DataFrame(cov_mu, index=cols, columns=cols)
 
     cov_sigma = covs - X.cov().to_numpy()
-    cov_sigma = cov_sigma.reshape((n_sim, m * m), order="F")
+    cov_sigma = cov_sigma.reshape((n_sim, m**2), order="F")
     cov_sigma = np.cov(cov_sigma.T)
 
     cov_sigma = np.diag(np.diag(cov_sigma))

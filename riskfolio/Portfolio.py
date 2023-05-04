@@ -330,26 +330,24 @@ class Portfolio(object):
     @property
     def benchweights(self):
         n = self.numassets
-        if self._benchweights is not None:
-            if self._benchweights.shape[0] == n and self._benchweights.shape[1] == 1:
-                a = self._benchweights
-            else:
-                raise NameError("Weights must have a size of shape (n_assets,1)")
-        else:
+        if self._benchweights is None:
             a = np.array(np.ones((n, 1)) / n)
+        elif self._benchweights.shape[0] == n and self._benchweights.shape[1] == 1:
+            a = self._benchweights
+        else:
+            raise NameError("Weights must have a size of shape (n_assets,1)")
         return a
 
     @benchweights.setter
     def benchweights(self, value):
         a = value
         n = self.numassets
-        if a is not None:
-            if a.shape[0] == n and a.shape[1] == 1:
-                a = a
-            else:
-                raise NameError("Weights must have a size of shape (n_assets,1)")
-        else:
+        if a is None:
             a = np.array(np.ones((n, 1)) / n)
+        elif a.shape[0] == n and a.shape[1] == 1:
+            a = a
+        else:
+            raise NameError("Weights must have a size of shape (n_assets,1)")
         self._benchweights = a
 
     @property
@@ -754,9 +752,7 @@ class Portfolio(object):
             if self.B is None:
                 self.B = pe.loadings_matrix(X=F, Y=X, **kwargs_1)
                 const = True
-            elif self.B is not None:
-                pass
-        elif B is not None:
+        else:
             self.B = B
 
         if flavor == "BLB":

@@ -147,10 +147,7 @@ class HCPortfolio(object):
                     )
                 inv_risk[k, 0] = risk
 
-            if rm == "MV":
-                inv_risk = 1 / np.power(inv_risk, 2)
-            else:
-                inv_risk = 1 / inv_risk
+            inv_risk = 1 / np.power(inv_risk, 2) if rm == "MV" else 1 / inv_risk
             weight = inv_risk * (1 / np.sum(inv_risk))
 
         weight = weight.reshape(-1, 1)
@@ -161,23 +158,22 @@ class HCPortfolio(object):
     def _opt_w(self, returns, mu, cov, obj="MinRisk", rm="MV", rf=0, l=2):
         if returns.shape[1] == 1:
             weight = np.array([1]).reshape(-1, 1)
-        else:
-            if obj in {"MinRisk", "Utility", "Sharpe"}:
-                port = rp.Portfolio(returns=returns)
-                port.assets_stats(method_mu="hist", method_cov="hist", d=0.94)
-                port.cov = cov
-                if mu is not None:
-                    port.mu = mu
-                weight = port.optimization(
-                    model="Classic", rm=rm, obj=obj, rf=rf, l=l, hist=True
-                ).to_numpy()
-            elif obj in {"ERC"}:
-                port = rp.Portfolio(returns=returns)
-                port.assets_stats(method_mu="hist", method_cov="hist", d=0.94)
-                port.cov = cov
-                weight = port.rp_optimization(
-                    model="Classic", rm=rm, rf=rf, b=None, hist=True
-                ).to_numpy()
+        elif obj in {"MinRisk", "Utility", "Sharpe"}:
+            port = rp.Portfolio(returns=returns)
+            port.assets_stats(method_mu="hist", method_cov="hist", d=0.94)
+            port.cov = cov
+            if mu is not None:
+                port.mu = mu
+            weight = port.optimization(
+                model="Classic", rm=rm, obj=obj, rf=rf, l=l, hist=True
+            ).to_numpy()
+        elif obj in {"ERC"}:
+            port = rp.Portfolio(returns=returns)
+            port.assets_stats(method_mu="hist", method_cov="hist", d=0.94)
+            port.cov = cov
+            weight = port.rp_optimization(
+                model="Classic", rm=rm, rf=rf, b=None, hist=True
+            ).to_numpy()
 
         weight = weight.reshape(-1, 1)
 
@@ -261,7 +257,7 @@ class HCPortfolio(object):
         weight = pd.Series(1, index=sort_order)  # set initial weights to 1
         items = [sort_order]
 
-        while len(items) > 0:  # loop while weights is under 100%
+        while items:  # loop while weights is under 100%
             items = [
                 i[j:k]
                 for i in items
@@ -407,7 +403,7 @@ class HCPortfolio(object):
                     alpha_1 = 0.5
 
                 else:
-                    for j in clusters.keys():
+                    for j in clusters:
                         if set(clusters[j]).issubset(left_set):
                             # Left cluster
                             left_cov = self.cov.iloc[clusters[j], clusters[j]]
@@ -525,10 +521,7 @@ class HCPortfolio(object):
         intra_weights = pd.DataFrame(index=clustered_assets.index)
         for i in range(self.k):
             cluster = clustered_assets.loc[clustered_assets == i]
-            if self.mu is not None:
-                cluster_mu = self.mu.loc[:, cluster.index]
-            else:
-                cluster_mu = None
+            cluster_mu = self.mu.loc[:, cluster.index] if self.mu is not None else None
             cluster_cov = self.cov.loc[cluster.index, cluster.index]
             cluster_returns = self.returns.loc[:, cluster.index]
             weights = pd.Series(
@@ -544,10 +537,7 @@ class HCPortfolio(object):
 
     def _inter_weights(self, intra_weights, obj="MinRisk", rm="MV", rf=0, l=2):
         # inter-cluster mean vector
-        if self.mu is not None:
-            tot_mu = self.mu @ intra_weights
-        else:
-            tot_mu = None
+        tot_mu = self.mu @ intra_weights if self.mu is not None else None
         # inter-cluster covariance matrix
         tot_cov = intra_weights.T.dot(np.dot(self.cov, intra_weights))
         # inter-cluster returns matrix
@@ -558,9 +548,7 @@ class HCPortfolio(object):
             self._opt_w(tot_ret, tot_mu, tot_cov, obj=obj, rm=rm, rf=rf, l=l).flatten(),
             index=intra_weights.columns,
         )
-        # determine the weight on each cluster by multiplying the intra-cluster weight with the inter-cluster weight
-        weights = intra_weights.mul(inter_weights, axis=1).sum(axis=1).sort_index()
-        return weights
+        return intra_weights.mul(inter_weights, axis=1).sum(axis=1).sort_index()
 
     # Allocate weights
     def optimization(
