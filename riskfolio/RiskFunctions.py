@@ -149,9 +149,7 @@ def VaR_Hist(X, alpha=0.05):
     sorted_a = np.sort(a, axis=0)
     index = int(np.ceil(alpha * len(sorted_a)) - 1)
     value = -sorted_a[index]
-    value = np.array(value).item()
-
-    return value
+    return np.array(value).item()
 
 
 def CVaR_Hist(X, alpha=0.05):
@@ -231,9 +229,7 @@ def WR(X):
 
     sorted_a = np.sort(a, axis=0)
     value = -sorted_a[0]
-    value = np.array(value).item()
-
-    return value
+    return np.array(value).item()
 
 
 def LPM(X, MAR=0, p=1):
@@ -283,11 +279,7 @@ def LPM(X, MAR=0, p=1):
 
     value = MAR - a
 
-    if p == 2:
-        n = value.shape[0] - 1
-    else:
-        n = value.shape[0]
-
+    n = value.shape[0] - 1 if p == 2 else value.shape[0]
     value = np.sum(np.power(value[np.where(value >= 0)], p)) / n
     value = np.power(value, 1 / p).item()
 
@@ -492,14 +484,8 @@ def ADD_Abs(X):
         if DD > 0:
             value += DD
         n += 1
-    if n == 0:
-        value = 0
-    else:
-        value = value / (n - 1)
-
-    value = np.array(value).item()
-
-    return value
+    value = 0 if n == 0 else value / (n - 1)
+    return np.array(value).item()
 
 
 def DaR_Abs(X, alpha=0.05):
@@ -551,9 +537,7 @@ def DaR_Abs(X, alpha=0.05):
     sorted_DD = np.sort(np.array(DD), axis=0)
     index = int(np.ceil(alpha * len(sorted_DD)) - 1)
     value = -sorted_DD[index]
-    value = np.array(value).item()
-
-    return value
+    return np.array(value).item()
 
 
 def CDaR_Abs(X, alpha=0.05):
@@ -714,11 +698,7 @@ def UCI_Abs(X):
         if DD > 0:
             value += DD**2
         n += 1
-    if n == 0:
-        value = 0
-    else:
-        value = np.sqrt(value / (n - 1))
-
+    value = 0 if n == 0 else np.sqrt(value / (n - 1))
     value = np.array(value).item()
 
     return value
@@ -818,14 +798,8 @@ def ADD_Rel(X):
         if DD > 0:
             value += DD
         n += 1
-    if n == 0:
-        value = 0
-    else:
-        value = value / (n - 1)
-
-    value = np.array(value).item()
-
-    return value
+    value = 0 if n == 0 else value / (n - 1)
+    return np.array(value).item()
 
 
 def DaR_Rel(X, alpha=0.05):
@@ -877,9 +851,7 @@ def DaR_Rel(X, alpha=0.05):
     sorted_DD = np.sort(np.array(DD), axis=0)
     index = int(np.ceil(alpha * len(sorted_DD)) - 1)
     value = -sorted_DD[index]
-    value = np.array(value).item()
-
-    return value
+    return np.array(value).item()
 
 
 def CDaR_Rel(X, alpha=0.05):
@@ -1040,11 +1012,7 @@ def UCI_Rel(X):
         if DD > 0:
             value += DD**2
         n += 1
-    if n == 0:
-        value = 0
-    else:
-        value = np.sqrt(value / (n - 1))
-
+    value = 0 if n == 0 else np.sqrt(value / (n - 1))
     value = np.array(value).item()
 
     return value
@@ -1079,9 +1047,7 @@ def GMD(X):
 
     T = a.shape[0]
     w_ = owa.owa_gmd(T)
-    value = (w_.T @ np.sort(a, axis=0)).item()
-
-    return value
+    return (w_.T @ np.sort(a, axis=0)).item()
 
 
 def TG(X, alpha=0.05, a_sim=100):
@@ -1117,9 +1083,7 @@ def TG(X, alpha=0.05, a_sim=100):
 
     T = a.shape[0]
     w_ = owa.owa_tg(T, alpha, a_sim)
-    value = (w_.T @ np.sort(a, axis=0)).item()
-
-    return value
+    return (w_.T @ np.sort(a, axis=0)).item()
 
 
 def RG(X):
@@ -1151,9 +1115,7 @@ def RG(X):
 
     T = a.shape[0]
     w_ = owa.owa_rg(T)
-    value = (w_.T @ np.sort(a, axis=0)).item()
-
-    return value
+    return (w_.T @ np.sort(a, axis=0)).item()
 
 
 def CVRG(X, alpha=0.05, beta=None):
@@ -1190,9 +1152,7 @@ def CVRG(X, alpha=0.05, beta=None):
 
     T = a.shape[0]
     w_ = owa.owa_cvrg(T, alpha=alpha, beta=beta)
-    value = (w_.T @ np.sort(a, axis=0)).item()
-
-    return value
+    return (w_.T @ np.sort(a, axis=0)).item()
 
 
 def TGRG(X, alpha=0.05, a_sim=100, beta=None, b_sim=None):
@@ -1234,9 +1194,7 @@ def TGRG(X, alpha=0.05, a_sim=100, beta=None, b_sim=None):
 
     T = a.shape[0]
     w_ = owa.owa_tgrg(T, alpha=alpha, a_sim=a_sim, beta=beta, b_sim=b_sim)
-    value = (w_.T @ np.sort(a, axis=0)).item()
-
-    return value
+    return (w_.T @ np.sort(a, axis=0)).item()
 
 
 ###############################################################################
@@ -1389,9 +1347,7 @@ def Sharpe_Risk(
     elif rm == "UCI_Rel":
         risk = UCI_Rel(a)
 
-    value = risk
-
-    return value
+    return risk
 
 
 def Sharpe(
@@ -1526,9 +1482,7 @@ def Sharpe(
         b_sim=b_sim,
     )
 
-    value = (ret - rf) / risk
-
-    return value
+    return (ret - rf) / risk
 
 
 ###############################################################################
@@ -1721,6 +1675,4 @@ def Risk_Contribution(
         RC_i = (risk_1 - risk_2) / (2 * d_i) * w_[i, 0]
         RC.append(RC_i)
 
-    RC = np.array(RC, ndmin=1)
-
-    return RC
+    return np.array(RC, ndmin=1)
